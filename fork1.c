@@ -8,4 +8,6 @@ int main(void) {
   t = fork();
   printf("fork returned %d\n", t);
   exit(0);
+  // fork() retuns 0 to the child process
+  // and returns the process ID of the child process to the parent process
 }
