@@ -25,10 +25,9 @@ int main(int argc, char *argv[])
     int echoStringLen;
     int respStringLen;
 
-    if ((argc < 3) || (argc > 4))
+    if ((argc < 3))
     {
         printf("Usage: %s <Server IP> <Echo Word> [<Echo Port>]\n", argv[0]);
-
         exit(1);
     }
 
@@ -36,41 +35,48 @@ int main(int argc, char *argv[])
     echoString = argv[2];
     if (((echoStringLen = strlen(echoString)) > ECHOMAX))
         printf("Echo word too long. \n");
-    if (argc == 4)
-        echoServPort = atoi(argv[3]);
-    else
-        echoServPort = 7;
-
-    /* Create a datagram/UDP socket */
-    if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
-        printf("Socket() failed.\n");
-
-    /* Construct the server address structure */
-    memset(&echoServAddr, 0, sizeof(echoServAddr));
-    echoServAddr.sin_family = AF_INET;
-    echoServAddr.sin_addr.s_addr = inet_addr(servIP);
-    echoServAddr.sin_port = htons(echoServPort);
-
-    printf("Sending: %s\n", echoString);
-
-    /* Send the String to the server*/
-    if ((sendto(sock, echoString, echoStringLen, 0, (struct sockaddr *)&echoServAddr, sizeof(echoServAddr))) != echoStringLen)
-        printf("sendto() sent a different number of bytes than expected.\n");
-
-    /* Recv a response */
-    fromSize = sizeof(fromAddr);
-    if ((respStringLen = recvfrom(sock, echoBuffer, ECHOMAX, 0, (struct sockaddr *)&fromAddr, &fromSize)) != echoStringLen)
-        printf("recvfrom() failed\n");
-
-    if (echoServAddr.sin_addr.s_addr != fromAddr.sin_addr.s_addr)
+    char *echoArray[argc];
+    for (int i = 2; i < argc; i++)
     {
-        printf("Error: received a packet from unknown source.\n");
-        exit(1);
+        echoArray[i] = argv[i];
     }
+    // if (argc == 4)
+    //     echoServPort = atoi(argv[3]);
+    // else
+    echoServPort = 7;
 
-    /* null-terminate the received data*/
-    echoBuffer[respStringLen] = '\0';
-    printf("Received: %s\n", echoBuffer);
+    for (int i = 2; i < argc; i++)
+    {
+        /* Create a datagram/UDP socket */
+        if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+            printf("Socket() failed.\n");
+
+        /* Construct the server address structure */
+        memset(&echoServAddr, 0, sizeof(echoServAddr));
+        echoServAddr.sin_family = AF_INET;
+        echoServAddr.sin_addr.s_addr = inet_addr(servIP);
+        echoServAddr.sin_port = htons(echoServPort);
+
+        printf("Sending: %s\n", echoArray[i]);
+        char *echoSendStringTmp = echoArray[i];
+        /* Send the String to the server*/
+        if ((sendto(sock, echoSendStringTmp, strlen(echoSendStringTmp), 0, (struct sockaddr *)&echoServAddr, sizeof(echoServAddr))) != strlen(echoSendStringTmp))
+            printf("sendto() sent a different number of bytes than expected.\n");
+        /* Recv a response */
+        fromSize = sizeof(fromAddr);
+        if ((respStringLen = recvfrom(sock, echoBuffer, ECHOMAX, 0, (struct sockaddr *)&fromAddr, &fromSize)) != strlen(echoSendStringTmp))
+            printf("recvfrom() failed\n");
+
+        if (echoServAddr.sin_addr.s_addr != fromAddr.sin_addr.s_addr)
+        {
+            printf("Error: received a packet from unknown source.\n");
+            exit(1);
+        }
+
+        /* null-terminate the received data*/
+        echoBuffer[respStringLen] = '\0';
+        printf("Received: %s\n", echoBuffer);
+    }
     close(sock);
     exit(0);
 }

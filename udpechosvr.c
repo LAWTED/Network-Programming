@@ -43,8 +43,7 @@ int main(int argc, char *argv[])
         if ((recvMsgSize = recvfrom(sock, echoBuffer, ECHOMAX, 0, (struct sockaddr *)&echoClntAddr, &cliAddrLen)) < 0)
             printf("recvfrom() failed.\n");
 
-        printf("Handing client %s\n", inet_ntoa(echoClntAddr.sin_addr));
-        printf("Receiving: %s\n", echoBuffer);
+        printf("Handing client %s:UDP%d Receiving: %s\n", inet_ntoa(echoClntAddr.sin_addr), getpid(), echoBuffer);
 
         if ((sendto(sock, echoBuffer, recvMsgSize, 0, (struct sockaddr *)&echoClntAddr, sizeof(echoClntAddr))) != recvMsgSize)
             printf("sendto() sent a different number of bytes than expected.\n");
